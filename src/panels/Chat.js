@@ -15,15 +15,15 @@ import { Input, Header, Counter, FixedLayout, RichCell, Link, PanelHeaderContent
 
 
 //Отрисовка всех элементов окна чата
-const Home = ({ id, lastElem, countUsers, messages, go, goMsg, fetchedUser, goInput, colorIco, inputValue, keyDown }) => (
+const Chat = ({ id, lastElem, countUsers, messages, go, goMsg, fetchedUser, goInput, colorIco, inputValue, keyDown }) => (
 
-	<Panel id={id}>
-		
-		<PanelHeader>
-    		<PanelHeaderContent status={ <Link onClick={go} data-to="users">{countUsers} человек онлайн</Link> }>
-    		Чат Luna Apps
-    		</PanelHeaderContent>
-		</PanelHeader>
+    <Panel id={id}>
+        
+        <PanelHeader>
+            <PanelHeaderContent status={ <Link onClick={go} data-to="users">{formatTextCount(countUsers, ['человек', 'человека', 'человек'])} онлайн</Link> }>
+            Чат Luna Apps
+            </PanelHeaderContent>
+        </PanelHeader>
 
         <Sms messages={messages}/>
         <div ref={lastElem} style={{ height: 65 }}/>
@@ -37,7 +37,7 @@ const Home = ({ id, lastElem, countUsers, messages, go, goMsg, fetchedUser, goIn
             </Div>
         </FixedLayout>
 
-	</Panel>
+    </Panel>
 );
 
 
@@ -64,6 +64,16 @@ const Sms = ({ messages }) => (
 );
 
 
+//Форматируем строку вывода кол-ва человека
+const formatTextCount = (n, text_forms) => {
+    n = Math.abs(n) % 100; var n1 = n % 10;
+    if (n > 10 && n < 20) { return n+' '+text_forms[2]; }
+    if (n1 > 1 && n1 < 5) { return n+' '+text_forms[1]; }
+    if (n1 == 1) { return n+' '+text_forms[0]; }
+    return n+' '+text_forms[2];
+};
+
+
 //Конвертируем время в часовой пояс юзера
 const convertTime = time => {
     
@@ -71,21 +81,21 @@ const convertTime = time => {
     const date_offset = time - date.getTimezoneOffset()*60; //unix время с учетом часового пояса в секундах
     var date_msg = new Date(date_offset*1000); //время unix преобразованное в формат даты
 
-    return date_msg.getHours()+':'+date_msg.getMinutes();
+    var hours = ("0" + date_msg.getHours()).slice(-2); //часы
+    var minutes = ("0" + date_msg.getMinutes()).slice(-2); //минуты
+
+    return hours+':'+minutes;
 };
 
 
-Home.propTypes = {
-	id: PropTypes.string.isRequired,
-	goMsg: PropTypes.func.isRequired,
-	fetchedUser: PropTypes.shape({
-		photo_100: PropTypes.string,
-		first_name: PropTypes.string,
-		last_name: PropTypes.string,
-		city: PropTypes.shape({
-			title: PropTypes.string,
-		}),
-	}),
+Chat.propTypes = {
+    id: PropTypes.string.isRequired,
+    goMsg: PropTypes.func.isRequired,
+    fetchedUser: PropTypes.shape({
+        photo_100: PropTypes.string,
+        first_name: PropTypes.string,
+        last_name: PropTypes.string
+    }),
 };
 
-export default Home;
+export default Chat;

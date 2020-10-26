@@ -10,14 +10,15 @@ import Users from './panels/Users';
 import io from "socket.io-client";
 
 let socket;
+let paramApp; //параметры приложения VK при запуске
 
 const App = () => {
-	const [activePanel, setActivePanel] = useState('chat');
-	const [fetchedUser, setUser] = useState(null);
-	const [popout, setPopout] = useState(<ScreenSpinner size='large' />);
+	const [activePanel, setActivePanel] = useState('chat'); //стартовый экран приложения
+	const [fetchedUser, setUser] = useState(null); //данные профиля пользователя VK
+	const [popout, setPopout] = useState(<ScreenSpinner size='large' />); //прелоадер-попап
 
-    const activeBtnColor = '#069EEF';
-    const noActiveBtnColor = '#C4C4C4';
+    const activeBtnColor = '#069EEF'; //цвет активной кнопки Отправить
+    const noActiveBtnColor = '#C4C4C4'; //цвет неактивной кнопки Отправить
 	const [colorIco, setColorIco] = useState(noActiveBtnColor); //цвет кнопки (по умолчанию неактивен)
 	const [inputValue, setInputValue] = useState('');  //текст сообщения из поля ввода
 	const [countUsers, setCountUsers] = useState(0); //кол-во человек онлайн в чате
@@ -47,11 +48,16 @@ const App = () => {
 			}
 		});
 		async function fetchData() {
+			
+            //1. Получаем информацию о профиле юезра VK
 			const user = await bridge.send('VKWebAppGetUserInfo');
 			setUser(user);
-
 			console.log('user = ', user);
 
+			//2. Получаем параметры запуска приложения
+			paramApp = getParamStart();
+
+            //3. Настраиваем подключение к чату
             var room = '1'; //айди чата
 			var name = user.first_name + ' ' + user.last_name; //имя пользователя
 			var ava = user.photo_100; //аватарка пользователя
@@ -59,18 +65,16 @@ const App = () => {
 			setRoom(room);
 	        setName(name);
 
-			//подключаемся к чату
+			//Подключаемся к чату
 		    socket.emit('join', { name, ava, room }, (error) => {
 		      if(error) {
 		        alert(error);
 		      }else{
-		        
-		        console.log('Подключились к комнате');
+		        console.log('Подключились к чату');
 		        setPopout(null); //убираем прелоадер
-
 		      }
 		    });
-	        
+            
 		}
 		fetchData();
 
@@ -81,14 +85,12 @@ const App = () => {
 
 		//ловим новые сообщения в чате
 	    socket.on('message', message => {
-	      
-          //время получения сообщения
 
 	      setMessages(msgs => [ ...msgs, message ]);
 	      console.log('Пришло сообщение = ', message);
 
 	      //скролим до последнего сообщения
-		  lastElemSms.current.scrollIntoView(); 
+		  if(paramApp.vk_platform != 'desktop_web') lastElemSms.current.scrollIntoView(); 
 
 	    });
 	    
@@ -101,6 +103,20 @@ const App = () => {
 	    });
 
 	}, []);
+
+
+	//Получение параметров запуска приложения
+	const getParamStart = () => {
+        
+        var parts = document.location.search.substr(1).split("&");
+        var paramStart = {}, curr;
+        for (var i=0; i<parts.length; i++) {
+            curr = parts[i].split('=');
+            paramStart[curr[0]] = curr[1];
+        }
+        return paramStart;
+
+	};
 
 
     //Нажатие на кнопку: "Отправить сообщение"
