@@ -1,5 +1,4 @@
 # testChatVK_client
-For company Luna Apps
 
 Как запускать проект локально для тестирования:
  
